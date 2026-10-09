@@ -4,13 +4,17 @@ Provider is chosen by the LLM_PROVIDER environment variable, read on each call:
   - "ollama" (default): local model, for development on your own PC.
   - "groq": hosted open-weight models on Groq's free tier, for the deployed app.
 
-Groq needs GROQ_API_KEY in the environment. Never put the key in the code or the repo.
+Groq needs GROQ_API_KEY, read from the environment or from a local .env file. Never put the key in the code or the repo.
 """
 import os
 import re
 import time
+from pathlib import Path
 
 import requests
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parent / ".env")  # local development; the deployed app gets its secrets from the host
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"  # open-weight, Apache 2.0; if this 404s, check the model list

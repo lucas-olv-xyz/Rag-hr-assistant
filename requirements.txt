@@ -3,3 +3,4 @@ fastembed
 numpy
 faiss-cpu
 requests
+python-dotenv

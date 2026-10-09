@@ -26,7 +26,14 @@ streamlit run app.py
 
 Choose the LLM provider:
 
-- **Groq (hosted):** create a free API key at console.groq.com, then set `LLM_PROVIDER=groq` and `GROQ_API_KEY`. On Windows PowerShell: `$env:LLM_PROVIDER="groq"; $env:GROQ_API_KEY="your_key"`.
+- **Groq (hosted):** create a free API key at console.groq.com and put it in a `.env` file in the project folder. The file is git-ignored:
+
+  ```
+  LLM_PROVIDER=groq
+  GROQ_API_KEY=your_key
+  ```
+
+  Environment variables work too, and take precedence over `.env`.
 - **Ollama (local, default):** `ollama pull qwen3:8b`, then run the app. Optional variables: `OLLAMA_MODEL`, `OLLAMA_URL`.
 
 ## Evaluation
