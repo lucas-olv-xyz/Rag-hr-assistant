@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture - HR Assistant</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --text: #1b2130; --muted: #6b7385; --line: #d5dae5;
+    --accent: #2563eb; --accent-soft: #dbe7ff; --ok: #16a34a; --ok-soft: #dcfce7;
+    --warn: #b45309; --warn-soft: #fef3c7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1017; --card: #161b26; --text: #e6eaf2; --muted: #8e97a9; --line: #2e3647;
+      --accent: #60a5fa; --accent-soft: #1e3a5f; --ok: #4ade80; --ok-soft: #14351f;
+      --warn: #fbbf24; --warn-soft: #3d2f0c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1240px; margin: 0 auto; padding: 24px 16px 56px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1rem; margin: 0 0 12px; }
+  h3 { font-size: .8rem; margin: 0 0 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .sub { color: var(--muted); margin: 0 0 16px; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-bottom: 18px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .85em; background: var(--bg); padding: 1px 5px; border-radius: 5px; }
+  .hint { color: var(--muted); font-size: .88rem; }
+
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; font-size: .88rem; color: var(--muted); align-items: center; }
+  .chip { display: inline-block; font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .04em; }
+  .chip.today { background: var(--ok-soft); color: var(--ok); }
+  .chip.planned { background: var(--warn-soft); color: var(--warn); }
+
+  /* ---------- zones ---------- */
+  .board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 44px; margin-bottom: 18px; }
+  .zone { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .zone:not(:last-child)::after {
+    content: "→"; position: absolute; right: -36px; top: 50%; transform: translateY(-50%);
+    font-size: 26px; color: var(--muted);
+  }
+  @media (max-width: 1000px) {
+    .board { grid-template-columns: 1fr; gap: 34px; }
+    .zone:not(:last-child)::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -34px; transform: translateX(-50%); }
+  }
+
+  .node {
+    border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--bg);
+    cursor: pointer; transition: box-shadow .25s, transform .25s, border-color .25s;
+  }
+  .node.today { border-color: var(--ok); }
+  .node.planned { border-style: dashed; }
+  .node:hover { transform: translateY(-2px); }
+  .node .name { font-weight: 700; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .node .tech { font-size: .8rem; color: var(--muted); margin-top: 3px; }
+  .node.hl { box-shadow: 0 0 0 3px var(--accent); border-color: var(--accent); }
+  .node.sel { box-shadow: 0 0 0 3px var(--accent-soft); }
+
+  /* ---------- detail + flows ---------- */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
+  .detail dt { font-size: .74rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-top: 10px; }
+  .detail dd { margin: 2px 0 0; }
+  .flow { list-style: none; margin: 0; padding: 0; counter-reset: s; }
+  .flow li {
+    counter-increment: s; cursor: pointer; padding: 9px 10px 9px 44px; position: relative;
+    border-radius: 10px; font-size: .92rem; margin-bottom: 4px;
+  }
+  .flow li::before {
+    content: counter(s); position: absolute; left: 10px; top: 8px; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-size: .78rem; font-weight: 700; display: grid; place-items: center;
+  }
+  .flow li:hover, .flow li.on { background: var(--accent-soft); }
+  .flow h3 { margin-bottom: 8px; }
+
+  table.data { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  table.data th, table.data td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.data th { font-size: .74rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  @media (max-width: 640px) {
+    table.data thead { display: none; }
+    table.data tr { display: block; border-bottom: 1px solid var(--line); padding: 8px 0; }
+    table.data td { display: block; border: none; padding: 2px 0; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Architecture · HR Assistant (RAG)</h1>
+  <p class="sub">Where the components run, where the data lives, and how a request moves through them. Click a box for details; click a step in the flows to highlight its components.</p>
+
+  <div class="legend">
+    <span class="chip today">Today</span> runs on one PC
+    <span class="chip planned">Planned</span> target for a production system
+  </div>
+
+  <div class="board">
+    <div class="zone">
+      <h3>1 · Clients</h3>
+      <div class="node today" data-id="user"></div>
+      <div class="node planned" data-id="admin"></div>
+    </div>
+
+    <div class="zone">
+      <h3>2 · Application</h3>
+      <div class="node today" data-id="ui"></div>
+      <div class="node planned" data-id="api"></div>
+      <div class="node planned" data-id="auth"></div>
+      <div class="node planned" data-id="queue"></div>
+      <div class="node planned" data-id="worker"></div>
+    </div>
+
+    <div class="zone">
+      <h3>3 · Data</h3>
+      <div class="node planned" data-id="objstore"></div>
+      <div class="node planned" data-id="pg"></div>
+      <div class="node planned" data-id="vec"></div>
+      <div class="node planned" data-id="cache"></div>
+    </div>
+
+    <div class="zone">
+      <h3>4 · Models & operations</h3>
+      <div class="node today" data-id="embed"></div>
+      <div class="node today" data-id="llm"></div>
+      <div class="node planned" data-id="evals"></div>
+      <div class="node planned" data-id="obs"></div>
+      <div class="node planned" data-id="deploy"></div>
+    </div>
+  </div>
+
+  <section class="panel">
+    <h2>Selected component</h2>
+    <dl class="detail" id="detail"><dd class="hint">Click any box above.</dd></dl>
+  </section>
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Query path · an employee asks</h2>
+      <ol class="flow" id="queryFlow"></ol>
+    </section>
+    <section class="panel">
+      <h2>Ingestion path · HR uploads a document</h2>
+      <ol class="flow" id="ingestFlow"></ol>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>Where the data lives</h2>
+    <table class="data">
+      <thead><tr><th>Data</th><th>Stored in</th><th>Sensitivity</th><th>Retention</th></tr></thead>
+      <tbody>
+        <tr><td>Source documents (PDF, MD)</td><td>Object storage (<code>data/docs/</code> today)</td><td>Internal</td><td>While the policy is in force; old versions kept for audit</td></tr>
+        <tr><td>Chunks + metadata</td><td>PostgreSQL (<code>chunks.jsonl</code> today)</td><td>Internal</td><td>Replaced when a new version is ingested</td></tr>
+        <tr><td>Vectors</td><td>pgvector in PostgreSQL (<code>faiss.index</code> today)</td><td>Internal, derived from documents</td><td>Same as chunks</td></tr>
+        <tr><td>Questions, answers, sources</td><td>PostgreSQL audit table</td><td><b>Personal</b>: reveals what employees ask</td><td>Short and fixed (e.g. 90 days); restricted access (LGPD)</td></tr>
+        <tr><td>Login sessions and groups</td><td>Identity provider (SSO)</td><td>Sensitive</td><td>Managed by the provider</td></tr>
+        <tr><td>Model weights</td><td>Local disk today; provider when hosted</td><td>Public</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <p class="hint">Target design, not yet built. "Today" components are the ones running in this repo right now.</p>
+</main>
+
+<script>
+const NODES = {
+  user:    { name: "Employee (browser)", zone: 1, status: "today", tech: "HTTPS · browser",
+    what: "The person asking questions. Uses only the web page.",
+    why: "Single entry point; no software to install.",
+    where: "Nothing stored on the client except the session cookie." },
+  admin:   { name: "HR admin", zone: 1, status: "planned", tech: "HTTPS · upload page",
+    what: "Uploads and replaces policy documents.",
+    why: "Documents enter the system through a controlled channel instead of files copied by hand.",
+    where: "Uploaded file goes straight to object storage." },
+  ui:      { name: "Web UI", zone: 2, status: "today", tech: "Streamlit (app.py)",
+    what: "Chat box, answer and sources panel.",
+    why: "Fast to build in Python. Can stay for an internal tool; a React front end is an option later.",
+    where: "No state. Session data lives in the browser session." },
+  api:     { name: "Query API", zone: 2, status: "planned", tech: "FastAPI · stateless",
+    what: "Endpoints: POST /ask, GET /sources/{id}, POST /documents. Runs the query pipeline.",
+    why: "Separating the API from the UI lets the same backend serve a chat, a Slack bot or other apps.",
+    where: "No data stored; it reads from the stores below." },
+  auth:    { name: "Identity (SSO)", zone: 2, status: "planned", tech: "OIDC · Entra ID or Google Workspace",
+    what: "Confirms who the user is and which groups they belong to.",
+    why: "Access control: a user only gets answers from documents their group may read.",
+    where: "Users and groups live in the company's identity provider, not in this app." },
+  queue:   { name: "Job queue", zone: 2, status: "planned", tech: "Redis + RQ",
+    what: "Holds ingestion jobs so uploads return immediately.",
+    why: "Parsing and embedding a large PDF can take minutes; it must not block the web request.",
+    where: "Job state in Redis; results in PostgreSQL." },
+  worker:  { name: "Ingestion worker", zone: 2, status: "planned", tech: "Python · same pipeline as phase 1",
+    what: "Parses, cleans, chunks, enriches, embeds and indexes each document.",
+    why: "Runs separately from the web app so heavy work does not slow down answers.",
+    where: "Reads raw files from object storage; writes chunks and vectors to PostgreSQL." },
+  objstore:{ name: "Object storage", zone: 3, status: "planned", tech: "S3 · MinIO locally",
+    what: "Keeps the original file of every document version.",
+    why: "Original files are kept for audit and for re-ingestion if the parser improves.",
+    where: "Today: <code>data/docs/</code> on disk." },
+  pg:      { name: "PostgreSQL", zone: 3, status: "planned", tech: "PostgreSQL 16",
+    what: "Documents, versions, chunks, metadata, permissions and the audit log.",
+    why: "One reliable database for relational data. Fewer moving parts than many separate stores.",
+    where: "Today: <code>chunks.jsonl</code> and <code>manifest.json</code>." },
+  vec:     { name: "Vector index", zone: 3, status: "planned", tech: "pgvector (Qdrant if it outgrows Postgres)",
+    what: "Stores embeddings and finds the nearest chunks for a question.",
+    why: "pgvector keeps vectors next to the metadata, so one filter can apply access rules and vector search together.",
+    where: "Today: <code>faiss.index</code> on disk, rebuilt in memory." },
+  cache:   { name: "Cache", zone: 3, status: "planned", tech: "Redis (optional)",
+    what: "Keeps answers to repeated questions and the embeddings of recent queries.",
+    why: "Saves time and LLM cost for the common questions. Optional at the start.",
+    where: "Short-lived; expires automatically." },
+  embed:   { name: "Embedding model", zone: 4, status: "today", tech: "fastembed · multilingual MiniLM (384 dim.)",
+    what: "Turns text into vectors. Used for documents and for questions.",
+    why: "Runs locally on CPU, with no API cost. Must be the same model for both sides.",
+    where: "Model cached on disk after the first download." },
+  llm:     { name: "LLM", zone: 4, status: "today", tech: "Ollama · qwen3:8b (local GPU)",
+    what: "Writes the answer from the numbered chunks and cites them.",
+    why: "Local for privacy during development. Production can switch to a hosted model behind the same interface.",
+    where: "Weights on local disk. Prompts and answers are logged in the audit table." },
+  evals:   { name: "Eval suite", zone: 4, status: "planned", tech: "Python · Q&A set in <code>evals/</code>",
+    what: "30 to 50 questions with expected answers and sources. Reports recall@5 and answer accuracy.",
+    why: "Proves that a change made the system better. Runs in CI on every pull request.",
+    where: "Question set versioned in the repo." },
+  obs:     { name: "Observability", zone: 4, status: "planned", tech: "OpenTelemetry · Langfuse or Grafana",
+    what: "Traces each step: latency, tokens, cost per question, which chunks were used.",
+    why: "When an answer is wrong, you can see which step failed.",
+    where: "Traces retained for a short, fixed period (they contain question text)." },
+  deploy:  { name: "Deploy", zone: 4, status: "planned", tech: "Docker Compose → cloud container service · GitHub Actions",
+    what: "Packages the services, runs tests and evals, and rolls out new versions.",
+    why: "Reproducible environments; the same image runs on a laptop and in production.",
+    where: "Images in a container registry." }
+};
+
+const QUERY_FLOW = [
+  { t: "Employee types the question in the web UI (HTTPS).", n: ["user", "ui"] },
+  { t: "UI sends POST /ask with the session token to the Query API.", n: ["ui", "api"] },
+  { t: "API validates the token and reads the user's groups from SSO.", n: ["api", "auth"] },
+  { t: "Question is turned into a vector by the embedding model.", n: ["api", "embed"] },
+  { t: "Vector index returns top-k chunks, filtered to documents the user may read.", n: ["api", "vec", "pg"] },
+  { t: "Cache is checked first; on a hit, the stored answer is returned.", n: ["api", "cache"] },
+  { t: "API loads the chunk text and metadata from PostgreSQL.", n: ["api", "pg"] },
+  { t: "API builds the prompt and calls the LLM.", n: ["api", "llm"] },
+  { t: "Question, sources and latency are written to the audit table.", n: ["api", "pg", "obs"] },
+  { t: "Answer with citations goes back to the UI.", n: ["api", "ui"] }
+];
+
+const INGEST_FLOW = [
+  { t: "HR admin uploads a PDF or Markdown file.", n: ["admin", "ui"] },
+  { t: "API stores the original file in object storage.", n: ["api", "objstore"] },
+  { t: "API queues an ingestion job with the document ID.", n: ["api", "queue"] },
+  { t: "Worker picks the job and fetches the file.", n: ["worker", "queue", "objstore"] },
+  { t: "Worker parses, cleans, chunks and enriches the text (phase 1 pipeline).", n: ["worker"] },
+  { t: "Worker creates the embeddings.", n: ["worker", "embed"] },
+  { t: "Chunks and metadata are saved to PostgreSQL.", n: ["worker", "pg"] },
+  { t: "Vectors are written to the vector index.", n: ["worker", "vec"] },
+  { t: "The previous version is marked as not current, so queries stop using it.", n: ["worker", "pg"] }
+];
+
+const $ = id => document.getElementById(id);
+const hl = ids => document.querySelectorAll(".node").forEach(n => n.classList.toggle("hl", ids.includes(n.dataset.id)));
+
+function renderNodes() {
+  document.querySelectorAll(".node").forEach(el => {
+    const d = NODES[el.dataset.id];
+    el.innerHTML = `<div class="name"><span>${d.name}</span><span class="chip ${d.status}">${d.status === "today" ? "Today" : "Planned"}</span></div>
+                    <div class="tech">${d.tech}</div>`;
+    el.addEventListener("click", () => {
+      document.querySelectorAll(".node").forEach(n => n.classList.remove("sel"));
+      el.classList.add("sel");
+      hl([]);
+      showNode(el.dataset.id);
+    });
+  });
+}
+
+function showNode(id) {
+  const d = NODES[id];
+  $("detail").innerHTML =
+    `<dt>Component</dt><dd><b>${d.name}</b> · ${d.tech}</dd>
+     <dt>What it does</dt><dd>${d.what}</dd>
+     <dt>Why this choice</dt><dd>${d.why}</dd>
+     <dt>Where its data lives</dt><dd>${d.where}</dd>`;
+}
+
+function renderFlow(list, el) {
+  el.innerHTML = list.map((s, i) => `<li data-i="${i}">${s.t}</li>`).join("");
+  el.querySelectorAll("li").forEach(li => li.addEventListener("click", () => {
+    el.querySelectorAll("li").forEach(x => x.classList.remove("on"));
+    li.classList.add("on");
+    const s = list[+li.dataset.i];
+    hl(s.n);
+    $("detail").innerHTML = `<dt>Step</dt><dd>${s.t}</dd><dt>Components involved</dt><dd>${s.n.map(id => NODES[id].name).join(" → ")}</dd>`;
+  }));
+}
+
+renderNodes();
+renderFlow(QUERY_FLOW, $("queryFlow"));
+renderFlow(INGEST_FLOW, $("ingestFlow"));
+</script>
+</body>
+</html>

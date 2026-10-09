@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG Flow - HR Assistant</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --text: #1b2130; --muted: #6b7385; --line: #d5dae5;
+    --ing: #2563eb; --ing-soft: #dbe7ff;
+    --qry: #9333ea; --qry-soft: #f0e1ff;
+    --ok: #16a34a; --ok-soft: #dcfce7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1017; --card: #161b26; --text: #e6eaf2; --muted: #8e97a9; --line: #2e3647;
+      --ing: #60a5fa; --ing-soft: #1e3a5f;
+      --qry: #c084fc; --qry-soft: #3b1f56;
+      --ok: #4ade80; --ok-soft: #14351f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1240px; margin: 0 auto; padding: 24px 16px 56px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  h2 { font-size: 1rem; margin: 0 0 12px; display: flex; align-items: center; gap: 10px; }
+  .badge { font-size: .72rem; padding: 3px 9px; border-radius: 999px; font-weight: 700; letter-spacing: .03em; }
+  .badge-ing { background: var(--ing-soft); color: var(--ing); }
+  .badge-qry { background: var(--qry-soft); color: var(--qry); }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-bottom: 18px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  button, input { font: inherit; border-radius: 10px; border: 1px solid var(--line); padding: 10px 16px; background: var(--card); color: var(--text); }
+  button { cursor: pointer; color: #fff; border: none; font-weight: 600; }
+  #btnIngest { background: var(--ing); }
+  #btnAsk { background: var(--qry); }
+  button:disabled { opacity: .45; cursor: default; }
+  input { flex: 1; min-width: 200px; }
+  .hint { color: var(--muted); font-size: .88rem; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .85em; background: var(--bg); padding: 1px 5px; border-radius: 5px; }
+
+  /* layout: diagram on the left, live panel on the right */
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .live { position: sticky; top: 16px; }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .live { position: static; }
+  }
+
+  /* ---------- vertical diagram ---------- */
+  .flow { display: flex; flex-direction: column; gap: 30px; margin-top: 16px; }
+  .node {
+    position: relative; display: flex; align-items: center; gap: 14px;
+    background: var(--card); border: 2px solid var(--line); border-radius: 14px;
+    padding: 14px 16px; cursor: pointer; opacity: .7;
+    transition: transform .3s, border-color .3s, box-shadow .3s, opacity .3s;
+  }
+  .node:hover { opacity: 1; }
+  .num {
+    flex: 0 0 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+    font-weight: 800; color: #fff; background: var(--muted); transition: background .3s;
+  }
+  .txt { min-width: 0; }
+  .node .t { font-weight: 700; font-size: 1.02rem; }
+  .node .f {
+    display: inline-block; margin-top: 4px; font: .74rem ui-monospace, Consolas, monospace;
+    color: var(--muted); background: var(--bg); padding: 2px 7px; border-radius: 6px; word-break: break-all;
+  }
+  .node.on { opacity: 1; transform: translateX(6px); border-color: var(--c); box-shadow: 0 10px 26px -10px var(--c); }
+  .node.on .num { background: var(--c); }
+  .node.done { opacity: 1; border-color: var(--ok); }
+  .node.done .num { background: var(--ok); }
+  .node.done .num span { display: none; }
+  .node.done .num::after { content: "✓"; }
+
+  /* vertical arrow between nodes */
+  .node:not(:last-child)::after {
+    content: ""; position: absolute; left: 50%; top: 100%; width: 2px; height: 22px;
+    background: var(--line); transform: translateX(-50%); transition: background .3s;
+  }
+  .node:not(:last-child)::before {
+    content: ""; position: absolute; left: 50%; top: calc(100% + 16px); transform: translateX(-50%);
+    border-top: 9px solid var(--line); border-left: 6px solid transparent; border-right: 6px solid transparent;
+    transition: border-top-color .3s;
+  }
+  .node.done:not(:last-child)::after { background: var(--ok); }
+  .node.done:not(:last-child)::before { border-top-color: var(--ok); }
+  .node.on:not(:last-child)::after { background: var(--c); }
+  .node.on:not(:last-child)::before { border-top-color: var(--c); }
+
+  /* data packet moving along the arrow */
+  .packet {
+    position: absolute; left: 50%; top: 100%; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--c); box-shadow: 0 0 10px var(--c); display: none; transform: translate(-50%, -50%); z-index: 2;
+  }
+  .node.on:not(:last-child) .packet { display: block; animation: moveY 1.1s linear infinite; }
+  @keyframes moveY { from { top: 100%; } to { top: calc(100% + 26px); } }
+
+  .lane-ing { --c: var(--ing); }
+  .lane-qry { --c: var(--qry); }
+
+  /* ---------- live panel ---------- */
+  .status { font-weight: 700; margin: 0 0 8px; }
+  .status-bar { height: 8px; background: var(--bg); border-radius: 999px; overflow: hidden; margin-bottom: 14px; border: 1px solid var(--line); }
+  .status-bar i { display: block; height: 100%; width: 0; background: var(--accent, var(--ing)); transition: width .4s ease; }
+  .log { list-style: none; margin: 0; padding: 0; max-height: 300px; overflow-y: auto; }
+  .log li { padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: .92rem; }
+  .log li b { color: var(--accent, var(--ing)); }
+  .detail { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .detail .k { color: var(--muted); font-size: .74rem; margin-top: 10px; text-transform: uppercase; letter-spacing: .05em; }
+  .detail .v { margin-top: 2px; }
+  .answer { display: none; margin-top: 16px; padding: 14px; border-radius: 12px; border-left: 4px solid var(--ok); background: var(--bg); }
+  .answer.show { display: block; }
+
+  table.files { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  table.files td { padding: 7px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.files td:first-child { font-family: ui-monospace, Consolas, monospace; white-space: nowrap; }
+  @media (max-width: 560px) { table.files td:first-child { white-space: normal; word-break: break-all; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>How the HR assistant works</h1>
+  <p class="sub">First prepare the documents (Phase 1). Then ask questions (Phase 2). Click any node for details.</p>
+
+  <div class="layout">
+    <!-- LEFT: diagram -->
+    <div>
+      <section class="panel lane-ing">
+        <h2><span class="badge badge-ing">PHASE 1</span> Ingestion · once per document</h2>
+        <div class="row">
+          <button id="btnIngest">Run ingestion</button>
+          <span class="hint"><code>data/docs/</code> → <code>data/index/</code></span>
+        </div>
+        <div class="flow" id="ingestFlow"></div>
+      </section>
+
+      <section class="panel lane-qry">
+        <h2><span class="badge badge-qry">PHASE 2</span> Query · every question</h2>
+        <div class="row">
+          <input id="question" value="How many vacation days do I get after 1 year?" aria-label="Question">
+          <button id="btnAsk">Ask (Enter)</button>
+        </div>
+        <div class="flow" id="queryFlow"></div>
+      </section>
+    </div>
+
+    <!-- RIGHT: what is happening -->
+    <aside class="panel live" id="live">
+      <h2>What is happening</h2>
+      <p class="status" id="status">Waiting. Pick a phase on the left.</p>
+      <div class="status-bar"><i id="bar"></i></div>
+      <ol class="log" id="log"></ol>
+
+      <div class="detail" id="detail">
+        <p class="hint" id="detailHint">Click a node to see its input, output and file.</p>
+      </div>
+
+      <div class="answer" id="answer"></div>
+    </aside>
+  </div>
+
+  <section class="panel">
+    <h2>Where the files live</h2>
+    <table class="files">
+      <tr><td>data/docs/</td><td>Source documents (.md, .pdf). You edit these.</td></tr>
+      <tr><td>data/index/chunks.jsonl</td><td>Chunks + metadata, one per line. Human-readable.</td></tr>
+      <tr><td>data/index/faiss.index</td><td>Vectors for similarity search (binary).</td></tr>
+      <tr><td>data/index/manifest.json</td><td>Hash of each document. Reprocesses only what changed.</td></tr>
+      <tr><td>app.py</td><td>Streamlit interface and query logic.</td></tr>
+    </table>
+  </section>
+
+  <p class="hint">Illustration: the answer text is a fixed example, not real model output.</p>
+</main>
+
+<script>
+const INGEST = [
+  { t: "Collect", f: "data/docs/*.md",
+    what: "Lists the files in the folder and checks which ones changed since the last ingestion.",
+    in: "data/docs/ folder (3 files)", out: "List of documents with hashes",
+    log: "Found <b>3 documents</b>. The hash of 02_ferias.md changed, so it will be processed." },
+  { t: "Parse", f: "02_ferias.md",
+    what: "Reads the text and separates the metadata block (front matter) from the content.",
+    in: "Raw .md file", out: "Text + metadata (titulo, versao, vigente_de, base_legal)",
+    log: "Metadata read: <code>versao: v1</code>, <code>vigente_de: 2026-01-01</code>." },
+  { t: "Clean", f: "text in memory",
+    what: "Removes noise (duplicate spaces, repeated PDF headers) and normalizes the text.",
+    in: "Raw text", out: "Normalized text",
+    log: "Extra spaces and line breaks removed." },
+  { t: "Chunk", f: "text in memory",
+    what: "Splits the text into ~150-word pieces with 30 words of overlap, keeping sections together when possible.",
+    in: "Normalized text", out: "N chunks, each tagged with its section number",
+    log: "Created <b>7 chunks</b>. Chunk 3 matches section 1.3 (the absence table)." },
+  { t: "Enrich", f: "chunks in memory",
+    what: "Attaches each chunk's document metadata and source section. This enables citations and filtering later.",
+    in: "Chunks", out: "Chunks with metadata",
+    log: "Chunk 3 received <code>{doc: rh-002, secao: 1.3, versao: v1}</code>." },
+  { t: "Embed", f: "multilingual model · 384 dim.",
+    what: "Turns each chunk into a vector of 384 numbers that represents the meaning of the text.",
+    in: "Chunks with metadata", out: "Vector matrix (7 x 384)",
+    log: "Vectors created with the <b>same model</b> that will process the questions." },
+  { t: "Index", f: "data/index/",
+    what: "Saves the vectors in FAISS and the chunks with metadata to disk. Updates the manifest with the new hash.",
+    in: "Vectors + chunks", out: "faiss.index, chunks.jsonl, manifest.json",
+    log: "Saved to <code>data/index/</code>. Next time, only changed files will be reprocessed." }
+];
+
+const QUERY = [
+  { t: "Question", f: "user input",
+    what: "Receives the typed question and prepares the query.",
+    in: "Typed text", out: "Question ready",
+    log: "Question received: <i>\"{Q}\"</i>" },
+  { t: "Embed", f: "same model as ingestion",
+    what: "Turns the question into a 384-number vector, in the same space as the chunks.",
+    in: "Question", out: "Question vector",
+    log: "Question vector computed with the same model used in ingestion." },
+  { t: "Vector search", f: "data/index/faiss.index",
+    what: "FAISS compares the question vector with every chunk and picks the 5 closest (top-k).",
+    in: "Question vector", out: "Top 5 chunks with scores",
+    log: "Top 5: <code>0.82</code> vacation §1.2 · <code>0.61</code> vacation §1.3 · <code>0.31</code> FGTS §1.1 (discarded)." },
+  { t: "Filter", f: "chunk metadata",
+    what: "Drops chunks from non-current versions and chunks with low scores.",
+    in: "Top 5 chunks", out: "Valid chunks (2)",
+    log: "All from the current version. Kept 2 with scores above 0.5." },
+  { t: "Prompt", f: "internal template",
+    what: "Builds the prompt with the rules (answer only from the context, cite [n]) and the numbered chunks.",
+    in: "Valid chunks + question", out: "Final prompt",
+    log: "Prompt built: rules + <code>[1]</code> vacation §1.2 + <code>[2]</code> vacation §1.3 + question." },
+  { t: "LLM", f: "Ollama · localhost:11434",
+    what: "Sends the prompt to the local model (qwen3:8b), which writes the answer using only the context.",
+    in: "Prompt", out: "Answer with citations",
+    log: "Request sent to Ollama. Waiting for the model..." },
+  { t: "Answer", f: "Streamlit interface",
+    what: "Shows the answer and the sources panel, so you can check where each sentence came from.",
+    in: "LLM answer", out: "Screen with answer + sources",
+    log: "Answer shown. Sources are in the \"Sources\" panel." }
+];
+
+const ANSWER = "You are entitled to <b>30 consecutive days</b> of vacation after completing 12 months of employment [1]. " +
+  "If you have up to 5 unjustified absences in the period, the entitlement is full; with more absences, the number of days decreases [2].";
+
+const $ = id => document.getElementById(id);
+const fast = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const wait = ms => new Promise(r => setTimeout(r, fast ? 0 : ms));
+let busy = false;
+
+function renderFlow(list, el, prefix) {
+  el.innerHTML = list.map((s, i) =>
+    `<div class="node" id="${prefix}${i}" data-i="${i}">
+       <span class="packet"></span>
+       <div class="num"><span>${i + 1}</span></div>
+       <div class="txt">
+         <div class="t">${s.t}</div>
+         <span class="f">${s.f}</span>
+       </div>
+     </div>`).join("");
+  el.querySelectorAll(".node").forEach(n =>
+    n.addEventListener("click", () => showDetail((prefix === "i" ? INGEST : QUERY)[+n.dataset.i])));
+}
+
+function showDetail(s) {
+  $("detailHint")?.remove();
+  $("detail").innerHTML =
+    `<div class="k">Step</div><div class="v"><b>${s.t}</b>: ${s.what}</div>
+     <div class="k">Input</div><div class="v">${s.in}</div>
+     <div class="k">Output</div><div class="v">${s.out}</div>
+     <div class="k">File / location</div><div class="v"><code>${s.f}</code></div>`;
+}
+
+function addLog(html) {
+  const li = document.createElement("li");
+  li.innerHTML = html;
+  $("log").appendChild(li);
+  li.scrollIntoView({ block: "nearest" });
+}
+
+function resetFlow(prefix, n) {
+  for (let i = 0; i < n; i++) $(prefix + i).classList.remove("on", "done");
+}
+
+async function runFlow(steps, prefix, flowEl, startMsg, buttons, afterFn) {
+  if (busy) return;
+  busy = true;
+  buttons.forEach(b => b.disabled = true);
+  $("log").innerHTML = "";
+  $("answer").classList.remove("show");
+  $("live").style.setProperty("--accent", getComputedStyle(flowEl).getPropertyValue("--c").trim());
+  addLog(startMsg);
+  for (let i = 0; i < steps.length; i++) {
+    const node = $(prefix + i);
+    node.style.setProperty("--c", getComputedStyle(flowEl).getPropertyValue("--c").trim());
+    node.classList.add("on");
+    $("status").textContent = `Step ${i + 1} of ${steps.length}: ${steps[i].t}`;
+    $("bar").style.width = `${(i / steps.length) * 100}%`;
+    showDetail(steps[i]);
+    await wait(700);
+    addLog(`<b>${steps[i].t}:</b> ${steps[i].log}`);
+    await wait(900);
+    node.classList.remove("on");
+    node.classList.add("done");
+    $("bar").style.width = `${((i + 1) / steps.length) * 100}%`;
+  }
+  $("status").textContent = "Done.";
+  if (afterFn) await afterFn();
+  busy = false;
+  buttons.forEach(b => b.disabled = false);
+}
+
+renderFlow(INGEST, $("ingestFlow"), "i");
+renderFlow(QUERY, $("queryFlow"), "q");
+
+$("btnIngest").addEventListener("click", () => {
+  resetFlow("i", INGEST.length);
+  runFlow(INGEST, "i", $("ingestFlow"), "<b>Starting ingestion</b> of data/docs/...", [$("btnIngest")]);
+});
+
+function ask() {
+  const q = $("question").value.trim();
+  if (!q) return;
+  resetFlow("q", QUERY.length);
+  const steps = QUERY.map(s => ({ ...s, log: s.log.replace("{Q}", q) }));
+  runFlow(steps, "q", $("queryFlow"), "<b>Query started</b> (Phase 2)", [$("btnAsk")], async () => {
+    $("answer").innerHTML = ANSWER + `<div class="hint" style="margin-top:8px">Example output. In the real app, this answer comes from Ollama.</div>`;
+    $("answer").classList.add("show");
+  });
+}
+
+$("btnAsk").addEventListener("click", ask);
+$("question").addEventListener("keydown", e => { if (e.key === "Enter") ask(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "top_k": 5,
+  "runs": [
+    {
+      "run": 1,
+      "summary": {
+        "answers_correct": 5,
+        "answers_total": 5,
+        "retrieval_hits": 5,
+        "refusals_correct": 2,
+        "refusals_total": 2
+      },
+      "cases": [
+        {
+          "id": "ferias-dias",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "Você tem direito a 30 dias corridos de férias após completar 12 meses de vínculo [2]."
+        },
+        {
+          "id": "fgts-percentual",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "A empresa deposita 8 % do salário bruto no FGTS a cada mês [1]"
+        },
+        {
+          "id": "horas-extras-domingo",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "O trabalho aos domingos só pode ser feito com autorização da gerência e segue a escala publicada. O adicional aplicado é de 100 % sobre o valor da hora normal [1][4]. Assim, a hora extra dominical recebe o dobro do valor da hora regular, conforme o exemplo de cálculo [3]. O pagamento segue esse percentual adicional."
+        },
+        {
+          "id": "aviso-previo-demissao",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "O colaborador que pede demissão deve cumprir **30 dias** de aviso prévio, sem acréscimo por tempo de casa [1]."
+        },
+        {
+          "id": "limite-diario",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "O limite máximo é de 10 horas trabalhadas por dia, somando a jornada normal e as horas extras [1]."
+        },
+        {
+          "id": "fora-home-office",
+          "passed": true,
+          "retrieved": null,
+          "answer": "Não encontrei essa informação nas políticas de RH. Para um caso específico, fale com o time de RH."
+        },
+        {
+          "id": "fora-capital",
+          "passed": true,
+          "retrieved": null,
+          "answer": "Não encontrei essa informação nas políticas de RH. Para um caso específico, fale com o time de RH."
+        }
+      ]
+    },
+    {
+      "run": 2,
+      "summary": {
+        "answers_correct": 5,
+        "answers_total": 5,
+        "retrieval_hits": 5,
+        "refusals_correct": 2,
+        "refusals_total": 2
+      },
+      "cases": [
+        {
+          "id": "ferias-dias",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "Você tem direito a 30 dias corridos de férias após completar 12 meses de vínculo [2]."
+        },
+        {
+          "id": "fgts-percentual",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "A empresa deposita 8 % do salário bruto no FGTS a cada mês [1]"
+        },
+        {
+          "id": "horas-extras-domingo",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "O trabalho aos domingos só pode ser feito com autorização da gerência e segue a escala publicada. O adicional aplicado é de 100 % sobre o valor da hora normal [1][4]. Assim, a hora extra dominical recebe o dobro da remuneração da hora regular, conforme o exemplo de cálculo [3]. Não há necessidade de folga compensatória se o pagamento for feito [4]."
+        },
+        {
+          "id": "aviso-previo-demissao",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "O colaborador que pede demissão deve cumprir **30 dias** de aviso prévio, sem acréscimo por tempo de casa [1]."
+        },
+        {
+          "id": "limite-diario",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "O limite máximo é de 10 horas trabalhadas por dia, somando a jornada normal e as horas extras [1]."
+        },
+        {
+          "id": "fora-home-office",
+          "passed": true,
+          "retrieved": null,
+          "answer": "Não encontrei essa informação nas políticas de RH. Para um caso específico, fale com o time de RH."
+        },
+        {
+          "id": "fora-capital",
+          "passed": true,
+          "retrieved": null,
+          "answer": "Não encontrei essa informação nas políticas de RH. Para um caso específico, fale com o time de RH."
+        }
+      ]
+    },
+    {
+      "run": 3,
+      "summary": {
+        "answers_correct": 5,
+        "answers_total": 5,
+        "retrieval_hits": 5,
+        "refusals_correct": 2,
+        "refusals_total": 2
+      },
+      "cases": [
+        {
+          "id": "ferias-dias",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "Você tem direito a 30 dias corridos de férias após completar 12 meses de vínculo [2]."
+        },
+        {
+          "id": "fgts-percentual",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "A empresa deposita 8 % do salário bruto no FGTS a cada mês [1]"
+        },
+        {
+          "id": "horas-extras-domingo",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "O trabalho aos domingos só pode ser realizado quando autorizado pela gerência e segue a escala publicada [1]. Nesse dia, o adicional sobre a hora normal é de 100% [4]. Assim, a hora extra dominical recebe o dobro do valor da hora regular, conforme o exemplo de cálculo que indica R$ 54,55 para um salário de R$ 6.000,00 [3]."
+        },
+        {
+          "id": "aviso-previo-demissao",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "O colaborador deve cumprir 30 dias de aviso prévio, sem acréscimo por tempo de casa. [1]"
+        },
+        {
+          "id": "limite-diario",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "O limite máximo de horas trabalhadas por dia, incluindo as horas extras, é de 10 horas. [1]"
+        },
+        {
+          "id": "fora-home-office",
+          "passed": true,
+          "retrieved": null,
+          "answer": "Não encontrei essa informação nas políticas de RH. Para um caso específico, fale com o time de RH."
+        },
+        {
+          "id": "fora-capital",
+          "passed": true,
+          "retrieved": null,
+          "answer": "Não encontrei essa informação nas políticas de RH. Para um caso específico, fale com o time de RH."
+        }
+      ]
+    }
+  ]
+}

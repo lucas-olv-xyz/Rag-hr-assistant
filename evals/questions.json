@@ -1,0 +1,47 @@
+[
+  {
+    "id": "ferias-dias",
+    "question": "Quantos dias de férias eu tenho direito após completar 1 ano de trabalho?",
+    "in_scope": true,
+    "expected_sections": ["Direito a férias > 1.2 Duração", "Direito a férias > 1.1 Período aquisitivo"],
+    "must_match": ["\\b30\\s*dias"]
+  },
+  {
+    "id": "fgts-percentual",
+    "question": "Qual é a porcentagem do meu salário que a empresa deposita no FGTS mensalmente?",
+    "in_scope": true,
+    "expected_sections": ["FGTS > 1.1 Depósito mensal"],
+    "must_match": ["\\b8\\s*%"]
+  },
+  {
+    "id": "horas-extras-domingo",
+    "question": "Como funciona o pagamento de horas extras se eu precisar trabalhar no domingo?",
+    "in_scope": true,
+    "expected_sections": ["Horas extras > 2.4 Trabalho aos domingos", "Horas extras > 2.2 Adicional"],
+    "must_match": ["100\\s*%"]
+  },
+  {
+    "id": "aviso-previo-demissao",
+    "question": "Se eu pedir demissão hoje, qual é o prazo do aviso prévio que preciso cumprir?",
+    "in_scope": true,
+    "expected_sections": ["Aviso prévio > 2.2 Pedido de demissão"],
+    "must_match": ["\\b30\\s*dias"]
+  },
+  {
+    "id": "limite-diario",
+    "question": "Qual é o limite máximo de horas que posso trabalhar por dia, somando as horas extras?",
+    "in_scope": true,
+    "expected_sections": ["Limite diário", "Horas extras > 2.1 Definição"],
+    "must_match": ["\\b10\\s*horas"]
+  },
+  {
+    "id": "fora-home-office",
+    "question": "Posso trabalhar em home office?",
+    "in_scope": false
+  },
+  {
+    "id": "fora-capital",
+    "question": "Qual é a capital da França?",
+    "in_scope": false
+  }
+]

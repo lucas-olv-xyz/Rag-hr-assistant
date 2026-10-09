@@ -1,0 +1,20 @@
+{
+  "01_jornada_horas_extras.md": {
+    "hash": "06f48e9c12ecb643600c8a6c89682784f79fbfb0249069f4ddf3e5f865255b31",
+    "doc_id": "rh-001",
+    "chunks": 7,
+    "ingested_at": "2026-10-09T16:20:12+00:00"
+  },
+  "02_ferias.md": {
+    "hash": "a966eb896418f8197b563fa42373b7a57a0ffffaf3d03d03634f47e72d0738d9",
+    "doc_id": "rh-002",
+    "chunks": 6,
+    "ingested_at": "2026-10-09T16:20:12+00:00"
+  },
+  "03_fgts_aviso_previo.md": {
+    "hash": "ea5dc95ff0b3de7c69212ef908dbf6206b46b60bfdd21d626ef0a5a1fde661d1",
+    "doc_id": "rh-003",
+    "chunks": 5,
+    "ingested_at": "2026-10-09T16:20:12+00:00"
+  }
+}

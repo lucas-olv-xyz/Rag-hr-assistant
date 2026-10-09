@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG Pipeline - HR Assistant</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --node: #e6eefc; --stroke: #2563eb; --text: #1b2130; --sub: #5b6478;
+    --arrow: #334155; --label: #2563eb; --muted: #7b8496; --card: #ffffff; --line: #d5dae5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1017; --node: #13355a; --stroke: #3b82f6; --text: #f1f5fb; --sub: #b8c4d9;
+      --arrow: #e6eaf2; --label: #7cb7ff; --muted: #8e97a9; --card: #161b26; --line: #2e3647;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 18px; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+  .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  svg { display: block; width: 100%; min-width: 760px; height: auto; }
+
+  .box { fill: var(--node); stroke: var(--stroke); stroke-width: 2; }
+  .title { fill: var(--text); font-size: 16px; font-weight: 700; }
+  .subt { fill: var(--sub); font-size: 12px; }
+  .arr { stroke: var(--arrow); stroke-width: 2.5; fill: none; }
+  .mk { fill: var(--arrow); }
+  .lbl { fill: var(--label); font-size: 13px; }
+  .lgd { fill: var(--sub); font-size: 13px; }
+  .grp { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 8 6; }
+  .grp-t { fill: var(--muted); font-size: 13px; font-weight: 700; letter-spacing: .06em; }
+  .note { color: var(--muted); font-size: .88rem; margin: 14px 2px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>RAG pipeline · HR Assistant</h1>
+  <p class="sub">Two phases share one embedding model. Indexing runs once per document; querying runs on every question.</p>
+
+  <div class="panel scroll">
+    <svg viewBox="0 0 1100 820" role="img" aria-label="RAG pipeline diagram">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+          <path class="mk" d="M0,0 L10,5 L0,10 z"/>
+        </marker>
+      </defs>
+
+      <!-- phase groups -->
+      <rect class="grp" x="30" y="20" width="1040" height="200" rx="18"/>
+      <text class="grp-t" x="50" y="48">INDEXING · once per document</text>
+      <rect class="grp" x="30" y="240" width="1040" height="380" rx="18"/>
+      <text class="grp-t" x="50" y="268">QUERY · every question</text>
+
+      <!-- DOCUMENT: wavy bottom (ISO document symbol) -->
+      <path class="box" d="M50,85 H220 V142 Q191,126 135,142 T50,142 Z"/>
+      <text class="title" x="135" y="116" text-anchor="middle">Documents</text>
+      <text class="subt" x="135" y="134" text-anchor="middle">PDF · Markdown</text>
+
+      <!-- MULTI-DOCUMENT: stacked pages = many chunks -->
+      <rect class="box" x="302" y="77" width="170" height="70" rx="6"/>
+      <rect class="box" x="296" y="81" width="170" height="70" rx="6"/>
+      <rect class="box" x="290" y="85" width="170" height="70" rx="6"/>
+      <text class="title" x="375" y="116" text-anchor="middle">Chunks</text>
+      <text class="subt" x="375" y="136" text-anchor="middle">~150 words, 30 overlap</text>
+
+      <!-- AI MODEL: hexagon -->
+      <polygon class="box" points="550,85 680,85 700,120 680,155 550,155 530,120"/>
+      <text class="title" x="615" y="116" text-anchor="middle">Embedding</text>
+      <text class="subt" x="615" y="136" text-anchor="middle">MiniLM · 384 dim.</text>
+
+      <!-- STORED DATA: curved left edge -->
+      <path class="box" d="M790,85 Q770,120 790,155 H940 V85 Z"/>
+      <text class="title" x="865" y="116" text-anchor="middle">Vectors</text>
+      <text class="subt" x="865" y="136" text-anchor="middle">one per chunk</text>
+
+      <!-- DATABASE: cylinder -->
+      <path class="box" d="M770,275 A85,12 0 0 0 940,275 V315 A85,12 0 0 1 770,315 Z"/>
+      <ellipse class="box" cx="855" cy="275" rx="85" ry="12"/>
+      <text class="title" x="855" y="293" text-anchor="middle">Vector store</text>
+      <text class="subt" x="855" y="311" text-anchor="middle">FAISS · today</text>
+
+      <!-- ACTOR / START-END: pill (terminator) -->
+      <rect class="box" x="50" y="380" width="170" height="70" rx="35"/>
+      <text class="title" x="135" y="411" text-anchor="middle">User</text>
+      <text class="subt" x="135" y="431" text-anchor="middle">employee</text>
+
+      <!-- INPUT: parallelogram -->
+      <polygon class="box" points="310,380 460,380 440,450 290,450"/>
+      <text class="title" x="375" y="411" text-anchor="middle">Query</text>
+      <text class="subt" x="375" y="431" text-anchor="middle">question</text>
+
+      <!-- AI MODEL: hexagon -->
+      <polygon class="box" points="550,380 680,380 700,415 680,450 550,450 530,415"/>
+      <text class="title" x="615" y="411" text-anchor="middle">Embedding</text>
+      <text class="subt" x="615" y="431" text-anchor="middle">same model as above</text>
+
+      <!-- DOCUMENT: prompt -->
+      <path class="box" d="M770,520 H940 V577 Q911,561 855,577 T770,577 Z"/>
+      <text class="title" x="855" y="551" text-anchor="middle">Prompt</text>
+      <text class="subt" x="855" y="566" text-anchor="middle">question + top-k chunks</text>
+
+      <!-- AI MODEL: hexagon -->
+      <polygon class="box" points="790,650 920,650 940,685 920,720 790,720 770,685"/>
+      <text class="title" x="855" y="681" text-anchor="middle">LLM</text>
+      <text class="subt" x="855" y="701" text-anchor="middle">qwen3:8b · Ollama</text>
+
+      <!-- OUTPUT: parallelogram -->
+      <polygon class="box" points="70,650 220,650 200,720 50,720"/>
+      <text class="title" x="135" y="681" text-anchor="middle">Response</text>
+      <text class="subt" x="135" y="701" text-anchor="middle">answer + citations</text>
+
+      <!-- indexing arrows -->
+      <path class="arr" d="M220 120 L286 120" marker-end="url(#ah)"/>
+      <path class="arr" d="M460 120 L528 120" marker-end="url(#ah)"/>
+      <path class="arr" d="M700 120 L776 120" marker-end="url(#ah)"/>
+      <path class="arr" d="M865 155 V258" marker-end="url(#ah)"/>
+      <text class="lbl" x="255" y="108" text-anchor="middle">chunk</text>
+      <text class="lbl" x="738" y="108" text-anchor="middle">embed</text>
+      <text class="lbl" x="878" y="212">index</text>
+
+      <!-- query arrows -->
+      <path class="arr" d="M220 415 H298" marker-end="url(#ah)"/>
+      <path class="arr" d="M452 415 H528" marker-end="url(#ah)"/>
+      <path class="arr" d="M684 382 L776 332" marker-end="url(#ah)"/>
+      <text class="lbl" x="752" y="362">search</text>
+
+      <path class="arr" d="M855 327 V518" marker-end="url(#ah)"/>
+      <text class="lbl" x="868" y="432">retrieve top-k</text>
+
+      <path class="arr" d="M375 450 V555 H768" marker-end="url(#ah)"/>
+      <text class="lbl" x="560" y="547" text-anchor="middle">query</text>
+
+      <path class="arr" d="M855 577 V648" marker-end="url(#ah)"/>
+
+      <!-- generation arrows -->
+      <path class="arr" d="M770 685 H212" marker-end="url(#ah)"/>
+      <text class="lbl" x="495" y="672" text-anchor="middle">generate</text>
+      <path class="arr" d="M135 650 V452" marker-end="url(#ah)"/>
+      <text class="lbl" x="148" y="556">answer</text>
+
+      <!-- LEGEND: standard flowchart symbols -->
+      <text class="grp-t" x="50" y="764">LEGEND</text>
+      <rect class="box" x="50" y="772" width="46" height="24" rx="12"/>
+      <text class="lgd" x="104" y="789">Start / end</text>
+      <polygon class="box" points="210,772 256,772 246,796 200,796"/>
+      <text class="lgd" x="262" y="789">Input / output</text>
+      <path class="box" d="M372,772 H418 V792 Q405,786 395,792 T372,792 Z"/>
+      <text class="lgd" x="426" y="789">Document</text>
+      <rect class="box" x="532" y="776" width="46" height="24" rx="4"/>
+      <rect class="box" x="528" y="774" width="46" height="24" rx="4"/>
+      <rect class="box" x="524" y="772" width="46" height="24" rx="4"/>
+      <text class="lgd" x="580" y="789">Chunks</text>
+      <polygon class="box" points="660,772 690,772 696,784 690,796 660,796 654,784"/>
+      <text class="lgd" x="704" y="789">AI model</text>
+      <path class="box" d="M790,778 A23,5 0 0 0 836,778 V792 A23,5 0 0 1 790,792 Z"/>
+      <ellipse class="box" cx="813" cy="778" rx="23" ry="5"/>
+      <text class="lgd" x="846" y="789">Database</text>
+      <path class="box" d="M930,772 H976 V796 H930 Q920 784 930 772 Z"/>
+      <text class="lgd" x="984" y="789">Vectors</text>
+    </svg>
+  </div>
+
+  <p class="note">Shapes follow flowchart conventions (ISO 5807); the hexagon for AI models is a common architecture-diagram convention. Scroll sideways on small screens.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,5 @@
+streamlit
+fastembed
+numpy
+faiss-cpu
+requests
