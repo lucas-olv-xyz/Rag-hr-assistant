@@ -1,10 +1,11 @@
 """Eval: measure the HR assistant against a fixed set of questions.
 
 Run from the project folder:
-    python evals/run_eval.py            # one run
-    python evals/run_eval.py --runs 3   # repeat: the LLM is not deterministic, so check the variance
+    python evals/run_eval.py --set dev         # the questions used while tuning
+    python evals/run_eval.py --set holdout     # questions written before the last tuning
+    python evals/run_eval.py --set dev --runs 3
 
-Exit code is 1 if a check fails, so the same script can gate a CI pipeline later.
+Exit code is 1 if a check fails, so the same script can gate a CI pipeline.
 """
 import argparse
 import json
@@ -17,11 +18,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from access import levels_for  # noqa: E402
 from llm import DEFAULT_GROQ_MODEL  # noqa: E402
 from rag import NO_ANSWER, TOP_K, answer  # noqa: E402
 from retrieval import search  # noqa: E402
 
-QUESTIONS_FILE = ROOT / "evals" / "questions.json"
+SETS = {
+    "dev": ROOT / "evals" / "questions.json",
+    "holdout": ROOT / "evals" / "questions_holdout.json",
+}
 RESULTS_DIR = ROOT / "evals" / "results"
 CITATION = re.compile(r"\[\d\]")
 
@@ -35,16 +40,18 @@ def model_name():
 def run_case(case):
     """In scope: the right section was retrieved, and the answer has the fact and a citation.
     Out of scope: the assistant must refuse."""
-    text = answer(case["question"])["answer"]
+    role = case.get("role", "visitante")
+    text = answer(case["question"], role=role)["answer"]
 
     if not case["in_scope"]:
-        return {"id": case["id"], "passed": text == NO_ANSWER, "retrieved": None, "answer": text}
+        refused = text == NO_ANSWER or "não encontr" in text.lower()
+        return {"id": case["id"], "role": role, "passed": refused, "retrieved": None, "answer": text}
 
-    sections = [chunk["secao"] for _, chunk in search(case["question"], k=TOP_K)]
+    sections = [chunk["secao"] for _, chunk in search(case["question"], k=TOP_K, levels=levels_for(role))]
     retrieved = any(expected in section for expected in case["expected_sections"] for section in sections)
     facts = all(re.search(pattern, text, re.IGNORECASE) for pattern in case["must_match"])
     cited = bool(CITATION.search(text))
-    return {"id": case["id"], "passed": facts and cited, "retrieved": retrieved,
+    return {"id": case["id"], "role": role, "passed": facts and cited, "retrieved": retrieved,
             "facts": facts, "cited": cited, "answer": text}
 
 
@@ -68,10 +75,11 @@ def passed_all(s):
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--set", choices=list(SETS), default="dev")
     parser.add_argument("--runs", type=int, default=1)
     args = parser.parse_args()
 
-    cases = json.loads(QUESTIONS_FILE.read_text(encoding="utf-8"))
+    cases = json.loads(SETS[args.set].read_text(encoding="utf-8"))
     runs, all_passed = [], True
 
     for run in range(1, args.runs + 1):
@@ -80,21 +88,24 @@ def main():
         all_passed &= passed_all(summary)
         runs.append({"run": run, "summary": summary, "cases": rows})
 
-        print(f"\nRun {run}")
+        print(f"\n{args.set} · run {run}")
         for row in rows:
             status = "PASS" if row["passed"] else "FAIL"
             if row["retrieved"] is None:
                 detail = "refused" if row["passed"] else "should have refused"
             else:
                 detail = f"retrieval {'ok' if row['retrieved'] else 'MISS'}"
-            print(f"  {status}  {row['id']:<22} {detail}")
+            print(f"  {status}  {row['id']:<26} {row['role']:<12} {detail}")
+            if not row["passed"]:
+                print(f"        answer: {row['answer'][:160]}")
         print(f"  answers {summary['answers_correct']}/{summary['answers_total']} | "
               f"retrieval@{TOP_K} {summary['retrieval_hits']}/{summary['answers_total']} | "
               f"refusals {summary['refusals_correct']}/{summary['refusals_total']}")
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    out = RESULTS_DIR / f"{datetime.now().strftime('%Y%m%d-%H%M%S')}.json"
+    out = RESULTS_DIR / f"{datetime.now().strftime('%Y%m%d-%H%M%S')}-{args.set}.json"
     out.write_text(json.dumps({
+        "set": args.set,
         "provider": os.getenv("LLM_PROVIDER", "ollama"),
         "model": model_name(),
         "top_k": TOP_K,

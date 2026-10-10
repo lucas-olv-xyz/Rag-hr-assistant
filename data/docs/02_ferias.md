@@ -4,6 +4,7 @@ documento_id: rh-002
 versao: v1
 vigente_de: 2026-01-01
 area: Recursos Humanos
+acesso: todos
 base_legal: CLT arts. 129 a 143; CF art. 7, XVII
 ---
 

@@ -90,6 +90,7 @@ def chunk_document(path, raw_text):
                 "vigente_de": meta["vigente_de"],
                 "area": meta["area"],
                 "base_legal": meta["base_legal"],
+                "acesso": meta.get("acesso", "rh"),  # fail closed: a document without a level is restricted
                 "fonte": path.name,
                 "secao": section,
                 # the section title goes into the text, so each chunk makes sense on its own

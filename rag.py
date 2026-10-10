@@ -1,15 +1,17 @@
 """Question answering: retrieve, filter, ask the LLM, return the answer with its sources.
 
-Used by app.py and, in the next step, by the eval.
+Used by app.py and by the eval. Each stage reports its name through `on_step`,
+which the interface uses to light up the pipeline diagram.
 """
 import re
 from datetime import date
 
+from access import levels_for
 from llm import generate
 from retrieval import search
 
 TOP_K = 5
-MIN_SCORE = 0.45  # chunks below this cosine similarity count as unrelated (tune with the eval)
+MIN_SCORE = 0.45  # chunks below this cosine similarity count as unrelated (tuned on the dev eval)
 
 NO_ANSWER = ("Não encontrei essa informação nas políticas de RH. "
              "Para um caso específico, fale com o time de RH.")
@@ -22,12 +24,6 @@ SYSTEM_PROMPT = (
     "Não aprove pedidos, não dê aconselhamento jurídico e não informe salários individuais."
 )
 
-
-def is_current(chunk, today):
-    """A chunk counts only once its policy is in force. ISO dates compare correctly as text."""
-    return chunk["vigente_de"] <= today
-
-
 # some models write citations as 【1】 or ［1］ instead of [1]; normalize so the sources panel matches
 FULLWIDTH_CITATION = re.compile(r"[【［]\s*(\d+)\s*[】］]")
 
@@ -36,14 +32,31 @@ def normalize_citations(text):
     return FULLWIDTH_CITATION.sub(r"[\1]", text)
 
 
-def answer(question):
-    today = date.today().isoformat()
-    hits = [(score, chunk) for score, chunk in search(question, k=TOP_K)
-            if score >= MIN_SCORE and is_current(chunk, today)]
-    if not hits:
-        return {"answer": NO_ANSWER, "sources": []}  # nothing relevant: skip the LLM call entirely
+def is_current(chunk, today):
+    """A chunk counts only once its policy is in force. ISO dates compare correctly as text."""
+    return chunk["vigente_de"] <= today
 
+
+def answer(question, role="visitante", on_step=None):
+    """Answer one question for a role. Returns the answer, its sources and whether it was refused."""
+    report = on_step or (lambda name: None)
+    today = date.today().isoformat()
+
+    report("retrieve")
+    found = search(question, k=TOP_K, levels=levels_for(role))
+
+    report("filter")
+    hits = [(score, chunk) for score, chunk in found if score >= MIN_SCORE and is_current(chunk, today)]
+    if not hits:
+        report("done")
+        return {"answer": NO_ANSWER, "sources": [], "refused": True}
+
+    report("prompt")
     context = "\n\n".join(f"[{i}] {c['titulo']} · {c['secao']}\n{c['texto']}"
                           for i, (_, c) in enumerate(hits, 1))
-    text = normalize_citations(generate(SYSTEM_PROMPT, f"Trechos:\n\n{context}\n\nPergunta: {question}"))
-    return {"answer": text, "sources": hits}
+    user_message = f"Trechos:\n\n{context}\n\nPergunta: {question}"
+
+    report("llm")
+    text = normalize_citations(generate(SYSTEM_PROMPT, user_message))
+    report("done")
+    return {"answer": text, "sources": hits, "refused": False}

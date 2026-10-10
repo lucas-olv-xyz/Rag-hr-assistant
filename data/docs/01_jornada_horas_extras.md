@@ -4,6 +4,7 @@ documento_id: rh-001
 versao: v2
 vigente_de: 2026-01-01
 area: Recursos Humanos
+acesso: todos
 base_legal: CLT arts. 58, 59 e 74; CF art. 7, XIII e XVI
 ---
 

@@ -4,6 +4,7 @@ documento_id: rh-003
 versao: v1
 vigente_de: 2026-01-01
 area: Recursos Humanos
+acesso: todos
 base_legal: Lei 8.036/1990 art. 15; CLT art. 487; Lei 12.506/2011
 ---
 

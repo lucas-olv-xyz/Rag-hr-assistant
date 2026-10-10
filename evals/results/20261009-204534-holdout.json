@@ -1,0 +1,131 @@
+{
+  "set": "holdout",
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "top_k": 5,
+  "runs": [
+    {
+      "run": 1,
+      "summary": {
+        "answers_correct": 10,
+        "answers_total": 10,
+        "retrieval_hits": 10,
+        "refusals_correct": 3,
+        "refusals_total": 3
+      },
+      "cases": [
+        {
+          "id": "h-ferias-14-meses",
+          "role": "visitante",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "Você tem direito a 30 dias corridos de férias, pois o período aquisitivo é concluído após 12 meses de vínculo [2][1]."
+        },
+        {
+          "id": "h-fgts-mensal",
+          "role": "visitante",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "A DataFlow Brasil deposita mensalmente 8 % do salário bruto do colaborador na conta vinculada do FGTS [1]."
+        },
+        {
+          "id": "h-domingo-adicional",
+          "role": "visitante",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "No domingo o adicional é de 100 % sobre o valor da hora normal, ou seja, você recebe o dobro da hora regular [3]."
+        },
+        {
+          "id": "h-pedido-demissao",
+          "role": "visitante",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "O colaborador deve cumprir 30 dias de aviso prévio ao pedir demissão. [2]"
+        },
+        {
+          "id": "h-limite-dia",
+          "role": "visitante",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "O limite máximo é de 10 horas trabalhadas por dia, somando a jornada normal e as horas extras [2]."
+        },
+        {
+          "id": "h-faltas-reducao",
+          "role": "visitante",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "Com 10 faltas injustificadas, o colaborador tem direito a 24 dias de férias [1]."
+        },
+        {
+          "id": "h-abono",
+          "role": "visitante",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "Sim, você pode converter até 1/3 das suas férias (10 dias) em dinheiro, desde que solicite até 15 dias antes do fim do período aquisitivo [1]."
+        },
+        {
+          "id": "h-antecedencia",
+          "role": "visitante",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "O pedido de férias deve ser feito no sistema de RH com antecedência mínima de 30 dias da data de início [1]."
+        },
+        {
+          "id": "h-aviso-10-anos",
+          "role": "visitante",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "Você tem direito a 60 dias de aviso prévio (30 dias base + 3 dias por cada um dos 10 anos trabalhados) [1]"
+        },
+        {
+          "id": "h-senior-rh",
+          "role": "rh",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "A faixa salarial para um profissional sênior é de R$ 10.000,00 a R$ 14.000,00 por mês [1]."
+        },
+        {
+          "id": "h-fora-cotacao",
+          "role": "visitante",
+          "passed": true,
+          "retrieved": null,
+          "answer": "Não encontrei essa informação nas políticas de RH. Para um caso específico, fale com o time de RH."
+        },
+        {
+          "id": "h-fora-faixa-visitante",
+          "role": "visitante",
+          "passed": true,
+          "retrieved": null,
+          "answer": "Não encontrei essa informação nas políticas de RH. Para um caso específico, fale com o time de RH."
+        },
+        {
+          "id": "h-fora-reembolso-viagem",
+          "role": "visitante",
+          "passed": true,
+          "retrieved": null,
+          "answer": "Não encontrei essa informação nas políticas."
+        }
+      ]
+    }
+  ]
+}

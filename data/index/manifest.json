@@ -1,20 +1,26 @@
 {
   "01_jornada_horas_extras.md": {
-    "hash": "06f48e9c12ecb643600c8a6c89682784f79fbfb0249069f4ddf3e5f865255b31",
+    "hash": "f0fc0892706ddcf7514a595bfabe07f41623094a9f0f035607bf61ece49acb19",
     "doc_id": "rh-001",
     "chunks": 7,
-    "ingested_at": "2026-10-09T16:20:12+00:00"
+    "ingested_at": "2026-10-09T23:44:15+00:00"
   },
   "02_ferias.md": {
-    "hash": "a966eb896418f8197b563fa42373b7a57a0ffffaf3d03d03634f47e72d0738d9",
+    "hash": "eaf7cc592285e9fd2d7a7989af44cc1cdc31ffcc783d315cb1504ace1d0bfb7b",
     "doc_id": "rh-002",
     "chunks": 6,
-    "ingested_at": "2026-10-09T16:20:12+00:00"
+    "ingested_at": "2026-10-09T23:44:15+00:00"
   },
   "03_fgts_aviso_previo.md": {
-    "hash": "ea5dc95ff0b3de7c69212ef908dbf6206b46b60bfdd21d626ef0a5a1fde661d1",
+    "hash": "d467d7e07396272b8999c1a27b36d795bf465abca4462469c278836b5a97f7e7",
     "doc_id": "rh-003",
     "chunks": 5,
-    "ingested_at": "2026-10-09T16:20:12+00:00"
+    "ingested_at": "2026-10-09T23:44:15+00:00"
+  },
+  "04_faixas_salariais_rh.md": {
+    "hash": "294b0d28af4ea8a0eceebfe2c4dd08335bf4da1f30d60381a4d9d50642f08a4f",
+    "doc_id": "rh-004",
+    "chunks": 4,
+    "ingested_at": "2026-10-09T23:44:15+00:00"
   }
 }
