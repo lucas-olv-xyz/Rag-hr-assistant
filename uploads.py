@@ -11,7 +11,7 @@ import ingest
 import retrieval
 
 MAX_BYTES = 200_000
-REQUIRED_FIELDS = {"titulo", "documento_id", "versao", "vigente_de", "area", "acesso", "base_legal"}
+REQUIRED_FIELDS = {"title", "document_id", "version", "valid_from", "area", "access", "legal_basis"}
 
 
 def safe_name(filename):
@@ -21,26 +21,26 @@ def safe_name(filename):
 def validate(data, filename):
     """Return (True, '') when the upload can be indexed, otherwise (False, reason)."""
     if not filename.lower().endswith(".md"):
-        return False, "O arquivo precisa ser .md."
+        return False, "The file must be a .md file."
     if len(data) > MAX_BYTES:
-        return False, "O arquivo passa de 200 KB."
+        return False, "The file is larger than 200 KB."
     try:
         text = data.decode("utf-8")
     except UnicodeDecodeError:
-        return False, "O arquivo precisa estar em UTF-8."
+        return False, "The file must be UTF-8 encoded."
     meta, _ = ingest.parse_front_matter(text)
     missing = REQUIRED_FIELDS - set(meta)
     if missing:
-        return False, "Faltam campos no bloco de metadados: " + ", ".join(sorted(missing)) + "."
-    if meta["acesso"] not in ("todos", "rh"):
-        return False, "O campo acesso precisa ser 'todos' ou 'rh'."
+        return False, "Missing fields in the metadata block: " + ", ".join(sorted(missing)) + "."
+    if meta["access"] not in ("all", "hr"):
+        return False, "The access field must be 'all' or 'hr'."
     # one document id per file: a second file with the same id would replace the first one's chunks
     if ingest.MANIFEST_FILE.exists():
         manifest = json.loads(ingest.MANIFEST_FILE.read_text(encoding="utf-8"))
         owners = [name for name, info in manifest.items()
-                  if info["doc_id"] == meta["documento_id"] and name != safe_name(filename)]
+                  if info["doc_id"] == meta["document_id"] and name != safe_name(filename)]
         if owners:
-            return False, f"O documento_id {meta['documento_id']} já é usado por {owners[0]}."
+            return False, f"The document_id {meta['document_id']} is already used by {owners[0]}."
     return True, ""
 
 

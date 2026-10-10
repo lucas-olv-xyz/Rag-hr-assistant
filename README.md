@@ -13,7 +13,7 @@ Built as an end-to-end RAG pipeline: ingestion with metadata, hybrid retrieval, 
 The left side of the app shows the pipeline and lights up each stage while a question is answered. Open [docs/rag_pipeline.html](docs/rag_pipeline.html) for the full diagram.
 
 1. **Ingestion** ([ingest.py](ingest.py)): reads the Markdown policies, parses their metadata (version, validity date, legal basis, access level), and splits each document by section. Each file gets a SHA-256 hash, so only changed documents are reprocessed. Chunks are embedded with `paraphrase-multilingual-MiniLM-L12-v2` (384 dimensions, via fastembed) and saved to a FAISS index.
-2. **Access** ([access.py](access.py)): a document's `acesso` field is `todos` (everyone) or `rh` (HR only). A role grants a set of levels. Unknown roles and documents without a level get the most restrictive access.
+2. **Access** ([access.py](access.py)): a document's `access` field is `all` (everyone) or `hr` (HR only). A role grants a set of levels: `visitor` and `employee` read `all`, and `hr` reads `all` and `hr`. Unknown roles and documents without a level get the most restrictive access.
 3. **Retrieval** ([retrieval.py](retrieval.py)): chunks the role may read are ranked two ways, by embedding similarity and by BM25 keyword match, and the two rankings are fused with Reciprocal Rank Fusion. Access is checked before ranking, so restricted text never reaches the prompt.
 4. **Answer** ([rag.py](rag.py)): drops chunks below a relevance threshold (0.45) and chunks whose policy is not yet in force. If nothing is left, it refuses without calling the LLM. Otherwise it sends the numbered chunks to the LLM with rules: answer only from the context, cite `[n]`, don't approve requests, don't give legal advice, don't disclose individual salaries.
 5. **LLM** ([llm.py](llm.py)): Groq (hosted open-weight `openai/gpt-oss-120b`, free tier) or Ollama (local), chosen by the `LLM_PROVIDER` variable. Rate-limit and server errors are retried with backoff.
@@ -40,15 +40,15 @@ Choose the LLM provider:
   Environment variables work too, and take precedence over `.env`.
 - **Ollama (local, default):** `ollama pull qwen3:8b`, then run the app. Optional variables: `OLLAMA_MODEL`, `OLLAMA_URL`.
 
-### Login for HR (optional)
+### Sign-in for HR (optional)
 
-Without login, everyone is a visitor and sees only `todos` documents. To give the HR team access to `rh` documents and to the upload panel:
+Without sign-in, everyone is a visitor and sees only `all` documents. To give the HR team access to `hr` documents and to the upload panel:
 
 1. Create a Google OAuth client (Google Cloud Console) with the redirect URI `https://rag-hrs-assistant.streamlit.app/oauth2callback` (and `http://localhost:8501/oauth2callback` for local runs).
 2. Add this to the app's secrets (Streamlit Cloud settings, or `.streamlit/secrets.toml` locally, which is git-ignored):
 
    ```toml
-   RH_EMAILS = ["hr.person@example.com"]
+   HR_EMAILS = ["hr.person@example.com"]
 
    [auth]
    redirect_uri = "https://rag-hrs-assistant.streamlit.app/oauth2callback"
@@ -58,7 +58,7 @@ Without login, everyone is a visitor and sees only `todos` documents. To give th
    server_metadata_url = "https://accounts.google.com/.well-known/openid-configuration"
    ```
 
-The login flow is wired up but has not been tested end to end against a real Google account yet.
+The sign-in flow is wired up but has not been tested end to end against a real Google account yet.
 
 ## Evaluation
 
@@ -76,7 +76,9 @@ LLM_PROVIDER=groq GROQ_API_KEY=your_key python evals/run_eval.py --set holdout
 | dev (9 questions) | 1 | 6/6 | 6/6 | 3/3 |
 | holdout (13 questions) | 2 | 10/10 in each run | 10/10 in each run | 3/3 in each run |
 
-Results are saved in [evals/results/](evals/results/). The earlier runs in that folder are kept on purpose: they show two bugs the eval caught, citations written as `【1】` instead of `[1]` (fixed by normalizing the output) and rate-limit errors on the free tier (fixed with retries and lower reasoning effort).
+The first English holdout run scored 8/10 because the day-count check expected "30 days" with nothing in between, and the answers said "30 consecutive vacation days". The answers were correct. The check was relaxed to allow up to two words before "days", and the result above is from after that change. The run with the stricter check is kept in [evals/results/](evals/results/).
+
+Results from the earlier Portuguese version are in [evals/results/archive-pt/](evals/results/archive-pt/). They show two bugs the eval caught: citations written as `【1】` instead of `[1]` (fixed by normalizing the output), and rate-limit errors on the free tier (fixed with retries and lower reasoning effort).
 
 [.github/workflows/eval.yml](.github/workflows/eval.yml) runs both sets on every push and pull request. It needs a repository secret named `GROQ_API_KEY`.
 
@@ -85,10 +87,11 @@ Results are saved in [evals/results/](evals/results/). The earlier runs in that 
 ## Known limitations
 
 - Small corpus: 4 policy documents, 22 chunks.
+- The assistant answers in English, whatever language the question is in.
 - On Streamlit Community Cloud, uploaded documents and the audit log live on the app's disk and disappear when the app restarts. To keep an uploaded document, commit it to the repository.
 - The free Groq tier allows about 8,000 tokens per minute for this model, so several users at once will hit rate limits.
 - The relevance threshold was tuned on a small set. A valid question phrased in an unusual way may be refused.
-- Login and the upload panel are not tested end to end against a real Google account.
+- Sign-in and the upload panel are not tested end to end against a real Google account.
 - Access control is per document level, not per person or per department.
 
 ## Project layout

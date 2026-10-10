@@ -2,11 +2,11 @@
 
 Two rankings are fused:
   - dense: cosine similarity between embeddings (the FAISS index built by ingest.py)
-  - sparse: BM25 keyword match, which catches exact terms such as 'férias' or '1/3'
+  - sparse: BM25 keyword match, which catches exact terms such as 'vacation' or '1/3'
 They are combined with Reciprocal Rank Fusion (RRF). Access is checked before ranking,
 so a chunk the caller may not read never reaches the ranking or the prompt.
 
-Try it:  python retrieval.py "quantos dias de férias eu tenho?"
+Try it:  python retrieval.py "how many vacation days do I get?"
 """
 import json
 import math
@@ -26,13 +26,13 @@ CANDIDATES = 10  # how many results each ranking contributes before fusion
 RRF_K = 60       # standard constant for reciprocal rank fusion
 BM25_K1, BM25_B = 1.5, 0.75
 STOPWORDS = set(
-    "a o as os de do da dos das em no na nos nas e que um uma para por com ao aos se eu me meu minha "
-    "quais qual quantos quanto quando como".split()
+    "a an and are as at be by can do does for from get how i if in is it many me much my of on or "
+    "the to was what when where which who why will with you your".split()
 )
 
 
 def tokens(text):
-    """Lowercase and drop accents, so 'férias' and 'ferias' match. Stopwords are removed."""
+    """Lowercase and drop accents, so 'résumé' and 'resume' match. Stopwords are removed."""
     folded = unicodedata.normalize("NFKD", text.lower())
     folded = "".join(ch for ch in folded if not unicodedata.combining(ch))
     return [t for t in re.findall(r"[a-z0-9]+", folded) if t not in STOPWORDS]
@@ -67,10 +67,10 @@ def load():
     return embedder, index, chunks
 
 
-def search(question, k=5, levels=("todos",)):
+def search(question, k=5, levels=("all",)):
     """Return up to k (dense score, chunk) pairs, best first. Only chunks whose level is in `levels` are considered."""
     embedder, index, chunks = load()
-    allowed = [i for i, c in enumerate(chunks) if c.get("acesso", "rh") in levels]  # missing level = restricted
+    allowed = [i for i, c in enumerate(chunks) if c.get("access", "hr") in levels]  # missing level = restricted
     if not allowed:
         return []
     allowed_set = set(allowed)
@@ -85,7 +85,7 @@ def search(question, k=5, levels=("todos",)):
     query = tokens(question)
     sparse = []
     if query:
-        sparse = sorted(zip(bm25_scores(query, [tokens(chunks[i]["texto"]) for i in allowed]), allowed), reverse=True)
+        sparse = sorted(zip(bm25_scores(query, [tokens(chunks[i]["text"]) for i in allowed]), allowed), reverse=True)
     sparse_rank = {r: pos for pos, (s, r) in enumerate(sparse[:CANDIDATES]) if s > 0}
 
     fused = {}
@@ -96,6 +96,6 @@ def search(question, k=5, levels=("todos",)):
 
 
 if __name__ == "__main__":
-    question = " ".join(sys.argv[1:]) or "Quantos dias de férias eu tenho após 1 ano?"
-    for score, chunk in search(question, levels=("todos", "rh")):
-        print(f"{score:.3f}  {chunk['id']:<12} {chunk['secao']}")
+    question = " ".join(sys.argv[1:]) or "How many vacation days do I get after 1 year?"
+    for score, chunk in search(question, levels=("all", "hr")):
+        print(f"{score:.3f}  {chunk['id']:<12} {chunk['section']}")

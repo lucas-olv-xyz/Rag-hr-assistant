@@ -1,0 +1,131 @@
+{
+  "set": "holdout",
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "top_k": 5,
+  "runs": [
+    {
+      "run": 1,
+      "summary": {
+        "answers_correct": 10,
+        "answers_total": 10,
+        "retrieval_hits": 10,
+        "refusals_correct": 3,
+        "refusals_total": 3
+      },
+      "cases": [
+        {
+          "id": "h-vacation-14-months",
+          "role": "visitor",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "You are entitled to 30 vacation days after completing the 12‑month acquisition period [2][3]."
+        },
+        {
+          "id": "h-fgts-monthly",
+          "role": "visitor",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "The company deposits 8 % of your gross salary each month into your FGTS account [1]."
+        },
+        {
+          "id": "h-sunday-premium",
+          "role": "visitor",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "You receive a 100 % premium on a Sunday, meaning you are paid double the regular hourly rate [1][2]"
+        },
+        {
+          "id": "h-resignation-notice",
+          "role": "visitor",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "You must work 30 days of notice when you resign [1]"
+        },
+        {
+          "id": "h-daily-max",
+          "role": "visitor",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "The daily limit, including overtime, is 10 hours in one day[1][2]"
+        },
+        {
+          "id": "h-absence-reduction",
+          "role": "visitor",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "You have 24 vacation days after 10 unjustified absences [1]"
+        },
+        {
+          "id": "h-cash-out",
+          "role": "visitor",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "Yes, you may convert up to one‑third of your vacation (10 days) into cash by requesting it up to 15 days before the end of the acquisition period [2]."
+        },
+        {
+          "id": "h-request-lead-time",
+          "role": "visitor",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "Vacation requests must be submitted in the HR system at least 30 days before the start date [1]."
+        },
+        {
+          "id": "h-notice-10-years",
+          "role": "visitor",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "You are entitled to 30 days of notice plus 3 days for each full year of service, up to a maximum of 90 days. With 10 years of service, that equals 30 + (3 × 10) = 60 days of notice [1]."
+        },
+        {
+          "id": "h-senior-hr",
+          "role": "hr",
+          "passed": true,
+          "retrieved": true,
+          "facts": true,
+          "cited": true,
+          "answer": "The salary band for a senior professional is R$ 10,000 to R$ 14,000 per month [1]"
+        },
+        {
+          "id": "h-out-dollar",
+          "role": "visitor",
+          "passed": true,
+          "retrieved": null,
+          "answer": "I couldn't find this in the HR policies. For a specific case, please contact the HR team."
+        },
+        {
+          "id": "h-out-junior-visitor",
+          "role": "visitor",
+          "passed": true,
+          "retrieved": null,
+          "answer": "I couldn't find this in the HR policies. For a specific case, please contact the HR team."
+        },
+        {
+          "id": "h-out-travel-reimbursement",
+          "role": "visitor",
+          "passed": true,
+          "retrieved": null,
+          "answer": "I couldn't find that information in the policies."
+        }
+      ]
+    }
+  ]
+}

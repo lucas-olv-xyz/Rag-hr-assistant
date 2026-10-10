@@ -8,15 +8,15 @@ from audit import record
 from rag import answer
 from uploads import save_and_index, validate
 
-st.set_page_config(page_title="Assistente de RH", layout="wide")
+st.set_page_config(page_title="HR Assistant", layout="wide")
 
 STAGES = [
-    ("question", "Pergunta", "Você digita a dúvida"),
-    ("retrieve", "Busca", "Embedding + FAISS + BM25, só nos documentos do seu perfil"),
-    ("filter", "Filtro", "Relevância mínima e vigência"),
-    ("prompt", "Prompt", "Trechos numerados e regras de resposta"),
-    ("llm", "LLM", "Escreve a resposta com citações"),
-    ("done", "Resposta", "Texto com as fontes"),
+    ("question", "Question", "You type the question"),
+    ("retrieve", "Search", "Embeddings + FAISS + BM25, only the documents your role can read"),
+    ("filter", "Filter", "Minimum relevance and validity date"),
+    ("prompt", "Prompt", "Numbered excerpts and answer rules"),
+    ("llm", "LLM", "Writes the answer with citations"),
+    ("done", "Answer", "Text with its sources"),
 ]
 ORDER = [key for key, _, _ in STAGES]
 COLORS = {"idle": "#6b7385", "active": "#2563eb", "done": "#16a34a"}
@@ -33,7 +33,7 @@ def load_secrets_into_env():
 
 
 def auth_enabled():
-    """Login is optional: it needs an [auth] block in the secrets and a Streamlit version that has st.login."""
+    """Sign-in is optional: it needs an [auth] block in the secrets and a Streamlit version that has st.login."""
     try:
         return "auth" in st.secrets and hasattr(st, "login")
     except Exception:
@@ -43,8 +43,8 @@ def auth_enabled():
 def current_role():
     if not auth_enabled() or not st.user.is_logged_in:
         return role_for(False, None, [])
-    rh_emails = list(st.secrets["RH_EMAILS"]) if "RH_EMAILS" in st.secrets else []
-    return role_for(True, st.user.email, rh_emails)
+    hr_emails = list(st.secrets["HR_EMAILS"]) if "HR_EMAILS" in st.secrets else []
+    return role_for(True, st.user.email, hr_emails)
 
 
 def render_diagram(active=None, done=()):
@@ -65,26 +65,27 @@ load_secrets_into_env()
 role = current_role()
 
 with st.sidebar:
-    st.subheader("Perfil")
+    st.subheader("Profile")
     if auth_enabled():
         if st.user.is_logged_in:
-            st.write(f"{st.user.email} · perfil **{role}**")
-            st.button("Sair", on_click=st.logout)
+            st.write(f"Signed in as {st.user.email} · role **{role}**")
+            st.button("Sign out", on_click=st.logout)
         else:
-            st.write("Visitante: só documentos públicos.")
-            st.button("Entrar", on_click=st.login)
+            st.write("Visitor: public documents only.")
+            st.button("Sign in", on_click=st.login)
     else:
-        st.write(f"Perfil **{role}**: só documentos públicos. Login de RH não está configurado.")
+        st.write(f"Role **{role}**: public documents only. HR sign-in is not configured.")
 
-    if role == "rh":
-        st.subheader("Enviar documento")
-        st.caption("Arquivo .md com o bloco de metadados. Ele é indexado na hora. "
-                   "No Streamlit Cloud, o envio some quando o app reinicia; para manter, commite no repositório.")
-        upload = st.file_uploader("Arquivo .md", type=["md"])
-        if upload is not None and st.button("Indexar documento"):
+    if role == "hr":
+        st.subheader("Upload a document")
+        st.caption("A .md file with the metadata block. It is indexed right away. "
+                   "On Streamlit Cloud the upload disappears when the app restarts; "
+                   "commit it to the repository to keep it.")
+        upload = st.file_uploader("Markdown file (.md)", type=["md"])
+        if upload is not None and st.button("Index document"):
             ok, reason = validate(upload.getvalue(), upload.name)
             if ok:
-                st.success("Documento indexado.")
+                st.success("Document indexed.")
                 st.code(save_and_index(upload.getvalue(), upload.name))
             else:
                 st.error(reason)
@@ -92,29 +93,29 @@ with st.sidebar:
 left, right = st.columns([1, 1.2], gap="large")
 
 with left:
-    st.subheader("Como a resposta é construída")
+    st.subheader("How the answer is built")
     diagram = st.empty()
     diagram.markdown(render_diagram(), unsafe_allow_html=True)
 
 with right:
-    st.title("Assistente de RH · DataFlow Brasil")
-    st.caption("Respostas baseadas nas políticas internas. Cada afirmação indica a seção de origem.")
-    question = st.text_input("Faça uma pergunta", placeholder="Ex.: Quantos dias de férias eu tenho após 1 ano?")
+    st.title("HR Assistant · DataFlow Brasil")
+    st.caption("Answers come from the internal HR policies. Each statement shows its source section.")
+    question = st.text_input("Ask a question", placeholder="e.g. How many vacation days do I get after 1 year?")
 
     if question.strip():
         def on_step(name):
             idx = ORDER.index(name)
             diagram.markdown(render_diagram(active=name, done=ORDER[:idx]), unsafe_allow_html=True)
 
-        with st.spinner("Consultando as políticas..."):
+        with st.spinner("Checking the policies..."):
             result = answer(question.strip(), role=role, on_step=on_step)
         diagram.markdown(render_diagram(active="done", done=ORDER[:-1]), unsafe_allow_html=True)
 
         st.markdown(result["answer"])
         if result["sources"]:
-            with st.expander(f"Fontes ({len(result['sources'])})"):
+            with st.expander(f"Sources ({len(result['sources'])})"):
                 for i, (score, chunk) in enumerate(result["sources"], 1):
-                    st.markdown(f"**[{i}] {chunk['titulo']}** · {chunk['secao']} · "
-                                f"versão {chunk['versao']} · relevância {score:.2f}")
-                    st.caption(chunk["texto"])
+                    st.markdown(f"**[{i}] {chunk['title']}** · {chunk['section']} · "
+                                f"version {chunk['version']} · relevance {score:.2f}")
+                    st.caption(chunk["text"])
         record(role, question.strip(), result["answer"], result["sources"], result["refused"])

@@ -1,89 +1,89 @@
 [
   {
-    "id": "h-ferias-14-meses",
-    "question": "Eu trabalhei 14 meses na empresa. Quantas férias eu já tenho direito?",
+    "id": "h-vacation-14-months",
+    "question": "I have worked here for 14 months. How many vacation days am I entitled to?",
     "in_scope": true,
-    "expected_sections": ["Direito a férias > 1.1 Período aquisitivo", "Direito a férias > 1.2 Duração"],
-    "must_match": ["\\b30\\s*dias"]
+    "expected_sections": ["Vacation entitlement > 1.1 Acquisition period", "Vacation entitlement > 1.2 Duration"],
+    "must_match": ["\\b30\\s+(\\w+\\s+){0,2}days"]
   },
   {
-    "id": "h-fgts-mensal",
-    "question": "A empresa deposita quanto por mês no meu FGTS?",
+    "id": "h-fgts-monthly",
+    "question": "How much does the company deposit into my FGTS each month?",
     "in_scope": true,
-    "expected_sections": ["FGTS > 1.1 Depósito mensal"],
+    "expected_sections": ["FGTS > 1.1 Monthly deposit"],
     "must_match": ["\\b8\\s*%"]
   },
   {
-    "id": "h-domingo-adicional",
-    "question": "Se eu fizer hora extra no domingo, quanto ganho a mais por hora?",
+    "id": "h-sunday-premium",
+    "question": "If I work overtime on a Sunday, how much extra do I get per hour?",
     "in_scope": true,
-    "expected_sections": ["Horas extras > 2.4 Trabalho aos domingos", "Horas extras > 2.2 Adicional"],
+    "expected_sections": ["Overtime > 2.4 Working on Sundays", "Overtime > 2.2 Premium"],
     "must_match": ["100\\s*%"]
   },
   {
-    "id": "h-pedido-demissao",
-    "question": "Quero pedir demissão. Quantos dias de aviso devo dar?",
+    "id": "h-resignation-notice",
+    "question": "I want to resign. How many days of notice do I have to give?",
     "in_scope": true,
-    "expected_sections": ["Aviso prévio > 2.2 Pedido de demissão"],
-    "must_match": ["\\b30\\s*dias"]
+    "expected_sections": ["Notice period > 2.2 Resignation"],
+    "must_match": ["\\b30\\s*days"]
   },
   {
-    "id": "h-limite-dia",
-    "question": "Qual o máximo de horas que posso trabalhar num dia, contando as extras?",
+    "id": "h-daily-max",
+    "question": "What is the maximum number of hours I can work in one day, counting overtime?",
     "in_scope": true,
-    "expected_sections": ["Limite diário", "Horas extras > 2.1 Definição"],
-    "must_match": ["\\b10\\s*horas"]
+    "expected_sections": ["Daily limit", "Overtime > 2.1 Definition"],
+    "must_match": ["\\b10\\s*hours"]
   },
   {
-    "id": "h-faltas-reducao",
-    "question": "Tive 10 faltas injustificadas no período. Quantos dias de férias eu tenho?",
+    "id": "h-absence-reduction",
+    "question": "I had 10 unjustified absences in the period. How many vacation days do I have?",
     "in_scope": true,
-    "expected_sections": ["Direito a férias > 1.3 Redução por faltas"],
-    "must_match": ["\\b24\\s*dias"]
+    "expected_sections": ["Vacation entitlement > 1.3 Reduction for unjustified absences"],
+    "must_match": ["\\b24\\s+(\\w+\\s+){0,2}days"]
   },
   {
-    "id": "h-abono",
-    "question": "Posso vender parte das minhas férias para receber em dinheiro?",
+    "id": "h-cash-out",
+    "question": "Can I sell part of my vacation to receive the money?",
     "in_scope": true,
-    "expected_sections": ["Abono pecuniário"],
-    "must_match": ["1/3|10\\s*dias"]
+    "expected_sections": ["Cash-out of vacation"],
+    "must_match": ["1/3|10\\s*days"]
   },
   {
-    "id": "h-antecedencia",
-    "question": "Com quanto tempo de antecedência preciso pedir minhas férias?",
+    "id": "h-request-lead-time",
+    "question": "How far in advance do I need to request my vacation?",
     "in_scope": true,
-    "expected_sections": ["Solicitação"],
-    "must_match": ["\\b30\\s*dias"]
+    "expected_sections": ["Request"],
+    "must_match": ["\\b30\\s*days"]
   },
   {
-    "id": "h-aviso-10-anos",
-    "question": "Fui demitido sem justa causa depois de 10 anos de empresa. Quantos dias de aviso prévio eu tenho?",
+    "id": "h-notice-10-years",
+    "question": "I was dismissed without cause after 10 years with the company. How many days of notice do I get?",
     "in_scope": true,
-    "expected_sections": ["Aviso prévio > 2.1 Demissão sem justa causa"],
-    "must_match": ["\\b60\\s*dias"]
+    "expected_sections": ["Notice period > 2.1 Dismissal without cause"],
+    "must_match": ["\\b60\\s*days"]
   },
   {
-    "id": "h-senior-rh",
-    "role": "rh",
-    "question": "Qual é a faixa salarial de um profissional sênior?",
+    "id": "h-senior-hr",
+    "role": "hr",
+    "question": "What is the salary band for a senior professional?",
     "in_scope": true,
-    "expected_sections": ["Faixas salariais > 1.3 Sênior"],
-    "must_match": ["14\\.000"]
+    "expected_sections": ["Salary bands > 1.3 Senior"],
+    "must_match": ["14[.,]000"]
   },
   {
-    "id": "h-fora-cotacao",
-    "question": "Qual é a cotação do dólar hoje?",
+    "id": "h-out-dollar",
+    "question": "What is the dollar exchange rate today?",
     "in_scope": false
   },
   {
-    "id": "h-fora-faixa-visitante",
-    "role": "visitante",
-    "question": "Qual é a faixa salarial de um profissional júnior?",
+    "id": "h-out-junior-visitor",
+    "role": "visitor",
+    "question": "What is the salary band for a junior professional?",
     "in_scope": false
   },
   {
-    "id": "h-fora-reembolso-viagem",
-    "question": "Qual é a política de reembolso de viagens?",
+    "id": "h-out-travel-reimbursement",
+    "question": "What is the travel reimbursement policy?",
     "in_scope": false
   }
 ]

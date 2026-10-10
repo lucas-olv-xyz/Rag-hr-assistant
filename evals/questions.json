@@ -1,61 +1,61 @@
 [
   {
-    "id": "ferias-dias",
-    "question": "Quantos dias de férias eu tenho direito após completar 1 ano de trabalho?",
+    "id": "vacation-days",
+    "question": "How many vacation days am I entitled to after completing 1 year of work?",
     "in_scope": true,
-    "expected_sections": ["Direito a férias > 1.2 Duração", "Direito a férias > 1.1 Período aquisitivo"],
-    "must_match": ["\\b30\\s*dias"]
+    "expected_sections": ["Vacation entitlement > 1.2 Duration", "Vacation entitlement > 1.1 Acquisition period"],
+    "must_match": ["\\b30\\s+(\\w+\\s+){0,2}days"]
   },
   {
-    "id": "fgts-percentual",
-    "question": "Qual é a porcentagem do meu salário que a empresa deposita no FGTS mensalmente?",
+    "id": "fgts-percentage",
+    "question": "What percentage of my salary does the company deposit into my FGTS every month?",
     "in_scope": true,
-    "expected_sections": ["FGTS > 1.1 Depósito mensal"],
+    "expected_sections": ["FGTS > 1.1 Monthly deposit"],
     "must_match": ["\\b8\\s*%"]
   },
   {
-    "id": "horas-extras-domingo",
-    "question": "Como funciona o pagamento de horas extras se eu precisar trabalhar no domingo?",
+    "id": "sunday-overtime",
+    "question": "How is overtime paid if I have to work on a Sunday?",
     "in_scope": true,
-    "expected_sections": ["Horas extras > 2.4 Trabalho aos domingos", "Horas extras > 2.2 Adicional"],
+    "expected_sections": ["Overtime > 2.4 Working on Sundays", "Overtime > 2.2 Premium"],
     "must_match": ["100\\s*%"]
   },
   {
-    "id": "aviso-previo-demissao",
-    "question": "Se eu pedir demissão hoje, qual é o prazo do aviso prévio que preciso cumprir?",
+    "id": "notice-resignation",
+    "question": "If I resign today, how many days of notice do I have to work?",
     "in_scope": true,
-    "expected_sections": ["Aviso prévio > 2.2 Pedido de demissão"],
-    "must_match": ["\\b30\\s*dias"]
+    "expected_sections": ["Notice period > 2.2 Resignation"],
+    "must_match": ["\\b30\\s*days"]
   },
   {
-    "id": "limite-diario",
-    "question": "Qual é o limite máximo de horas que posso trabalhar por dia, somando as horas extras?",
+    "id": "daily-limit",
+    "question": "What is the maximum number of hours I can work in one day, including overtime?",
     "in_scope": true,
-    "expected_sections": ["Limite diário", "Horas extras > 2.1 Definição"],
-    "must_match": ["\\b10\\s*horas"]
+    "expected_sections": ["Daily limit", "Overtime > 2.1 Definition"],
+    "must_match": ["\\b10\\s*hours"]
   },
   {
-    "id": "fora-home-office",
-    "question": "Posso trabalhar em home office?",
+    "id": "out-home-office",
+    "question": "Can I work from home?",
     "in_scope": false
   },
   {
-    "id": "fora-capital",
-    "question": "Qual é a capital da França?",
+    "id": "out-capital",
+    "question": "What is the capital of France?",
     "in_scope": false
   },
   {
-    "id": "faixas-pleno-rh",
-    "role": "rh",
-    "question": "Quais são as faixas salariais do nível Pleno?",
+    "id": "salary-bands-hr",
+    "role": "hr",
+    "question": "What are the salary bands for the mid-level?",
     "in_scope": true,
-    "expected_sections": ["Faixas salariais > 1.2 Pleno"],
-    "must_match": ["7\\.000", "10\\.000"]
+    "expected_sections": ["Salary bands > 1.2 Mid-level"],
+    "must_match": ["7[.,]000", "10[.,]000"]
   },
   {
-    "id": "faixas-pleno-visitante",
-    "role": "visitante",
-    "question": "Quais são as faixas salariais do nível Pleno?",
+    "id": "salary-bands-visitor",
+    "role": "visitor",
+    "question": "What are the salary bands for the mid-level?",
     "in_scope": false
   }
 ]

@@ -29,6 +29,7 @@ SETS = {
 }
 RESULTS_DIR = ROOT / "evals" / "results"
 CITATION = re.compile(r"\[\d\]")
+REFUSAL = re.compile(r"couldn.t find|could not find", re.IGNORECASE)
 
 
 def model_name():
@@ -40,14 +41,14 @@ def model_name():
 def run_case(case):
     """In scope: the right section was retrieved, and the answer has the fact and a citation.
     Out of scope: the assistant must refuse."""
-    role = case.get("role", "visitante")
+    role = case.get("role", "visitor")
     text = answer(case["question"], role=role)["answer"]
 
     if not case["in_scope"]:
-        refused = text == NO_ANSWER or "não encontr" in text.lower()
+        refused = text == NO_ANSWER or bool(REFUSAL.search(text))
         return {"id": case["id"], "role": role, "passed": refused, "retrieved": None, "answer": text}
 
-    sections = [chunk["secao"] for _, chunk in search(case["question"], k=TOP_K, levels=levels_for(role))]
+    sections = [chunk["section"] for _, chunk in search(case["question"], k=TOP_K, levels=levels_for(role))]
     retrieved = any(expected in section for expected in case["expected_sections"] for section in sections)
     facts = all(re.search(pattern, text, re.IGNORECASE) for pattern in case["must_match"])
     cited = bool(CITATION.search(text))
@@ -95,7 +96,7 @@ def main():
                 detail = "refused" if row["passed"] else "should have refused"
             else:
                 detail = f"retrieval {'ok' if row['retrieved'] else 'MISS'}"
-            print(f"  {status}  {row['id']:<26} {row['role']:<12} {detail}")
+            print(f"  {status}  {row['id']:<26} {row['role']:<10} {detail}")
             if not row["passed"]:
                 print(f"        answer: {row['answer'][:160]}")
         print(f"  answers {summary['answers_correct']}/{summary['answers_total']} | "

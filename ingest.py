@@ -28,6 +28,7 @@ EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 MAX_WORDS = 150  # longest chunk, in words
 OVERLAP = 30     # words shared between pieces of a long section
+DISCLAIMER = "*This is a fictional"  # closing note of every document; it is not useful for answers
 
 HEADING = re.compile(r"^(#{1,2})\s+(.*)$", re.MULTILINE)
 
@@ -46,7 +47,7 @@ def parse_front_matter(text):
 
 def clean(body):
     """Remove the disclaimer line that every document ends with."""
-    lines = [line for line in body.splitlines() if not line.startswith("*Este documento")]
+    lines = [line for line in body.splitlines() if not line.startswith(DISCLAIMER)]
     return "\n".join(lines).strip()
 
 
@@ -83,19 +84,19 @@ def chunk_document(path, raw_text):
     for section, content in split_sections(clean(body)):
         for piece in window(content):
             chunks.append({
-                "id": f"{meta['documento_id']}:{len(chunks)}",
-                "doc_id": meta["documento_id"],
-                "titulo": meta["titulo"],
-                "versao": meta["versao"],
-                "vigente_de": meta["vigente_de"],
+                "id": f"{meta['document_id']}:{len(chunks)}",
+                "doc_id": meta["document_id"],
+                "title": meta["title"],
+                "version": meta["version"],
+                "valid_from": meta["valid_from"],
                 "area": meta["area"],
-                "base_legal": meta["base_legal"],
-                "acesso": meta.get("acesso", "rh"),  # fail closed: a document without a level is restricted
-                "fonte": path.name,
-                "secao": section,
+                "legal_basis": meta["legal_basis"],
+                "access": meta.get("access", "hr"),  # fail closed: a document without a level is restricted
+                "source": path.name,
+                "section": section,
                 # the section title goes into the text, so each chunk makes sense on its own
-                "texto": f"{section}\n{piece}",
-                "palavras": len(piece.split()),
+                "text": f"{section}\n{piece}",
+                "words": len(piece.split()),
             })
     return chunks
 
@@ -107,7 +108,7 @@ def file_hash(path):
 def build_index(chunks):
     """Embed every chunk and save a FAISS index. Row i of the index is line i of chunks.jsonl."""
     embedder = TextEmbedding(EMBED_MODEL)
-    vectors = np.array(list(embedder.embed([c["texto"] for c in chunks])), dtype="float32")
+    vectors = np.array(list(embedder.embed([c["text"] for c in chunks])), dtype="float32")
     faiss.normalize_L2(vectors)  # unit length, so inner product = cosine similarity
     index = faiss.IndexFlatIP(vectors.shape[1])
     index.add(vectors)
@@ -155,7 +156,7 @@ def main():
         }
         print(f"chunk  {name}: {len(new_chunks)} chunks")
         for c in new_chunks:
-            print(f"         {c['id']:<14} {c['palavras']:>4} words  {c['secao']}")
+            print(f"         {c['id']:<14} {c['words']:>4} words  {c['section']}")
 
     CHUNKS_FILE.write_text("".join(json.dumps(c, ensure_ascii=False) + "\n" for c in chunks), encoding="utf-8")
     MANIFEST_FILE.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
